@@ -2,39 +2,34 @@ package city
 
 import (
 	"context"
-	"unicode"
+	"fmt"
+	"strings"
+
+	cityStrategies "github.com/sergeylys/city-counter/backend/internal/city/strategies"
 )
 
 type CityService struct {
-	repository CityRepository
+	strategies map[string]cityStrategies.CountStrategy
 }
 
-func NewCityService(repository CityRepository) *CityService {
+func NewCityService(strategies map[string]cityStrategies.CountStrategy) *CityService {
 	return &CityService{
-		repository: repository,
+		strategies: strategies,
 	}
 }
 
-func (service *CityService) CountByLetter(ctx context.Context, letter rune) (int, error) {
-	count := 0
+func (service *CityService) CountByLetter(ctx context.Context, letter string, strategyName string) (int, error) {
+	strategy, exists := service.strategies[strategyName]
 
-	cities, err := service.repository.GetCities(ctx)
-
-	if err != nil {
-		return 0, err
+	if !exists {
+		return 0, fmt.Errorf(
+			"unknown strategy: %s",
+			strategyName,
+		)
 	}
 
-	for _, city := range cities {
-		runes := []rune(city.Name)
-
-		if len(runes) == 0 {
-			continue
-		}
-
-		if unicode.ToLower(runes[0]) == unicode.ToLower(letter) {
-			count++
-		}
-	}
-
-	return count, nil
+	return strategy.Count(
+		ctx,
+		strings.ToLower(letter),
+	)
 }

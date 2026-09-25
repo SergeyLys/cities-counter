@@ -5,26 +5,22 @@ import (
 	"net/http"
 
 	"github.com/sergeylys/city-counter/backend/internal/city"
+	"github.com/sergeylys/city-counter/backend/internal/config"
 )
 
 func main() {
-	cities := []city.City{
-		{Name: "Rio de Janeiro"},
-		{Name: "Cairo"},
-		{Name: "Chongqing"},
-		{Name: "Chengdu"},
-	}
+	cfg := config.Load()
 
-	cityRepository := city.NewMemoryCityRepository(cities)
-	cityService := city.NewCityService(cityRepository)
-	cityHandler := city.NewCityHandler(cityService)
+	cityHandler := city.CityModule()
 
 	http.HandleFunc("/health", healthHandler)
 	http.HandleFunc("/api/cities/count", cityHandler.Count)
 
-	log.Println("Server is running and listening on PORT :8080")
+	address := ":" + cfg.Port
 
-	if err := http.ListenAndServe(":8080", nil); err != nil {
+	log.Printf("Server listening on %s", address)
+
+	if err := http.ListenAndServe(address, nil); err != nil {
 		log.Fatal(err)
 	}
 }

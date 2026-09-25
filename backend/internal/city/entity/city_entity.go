@@ -1,4 +1,4 @@
-package city
+package cityEntity
 
 type City struct {
 	Name string
