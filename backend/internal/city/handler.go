@@ -30,22 +30,26 @@ func (handler *CityHandler) Count(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 
-	if len([]rune(letter)) != 1 {
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(ErrorResponse{
-			Error: "letter must contain exactly one character",
-		})
-		return
+	var strategy string
+
+	strategy = strings.TrimSpace(
+		r.URL.Query().Get("strategy"),
+	)
+
+	if strategy == "" {
+		strategy = "startswith"
 	}
 
-	runeLetter := []rune(letter)[0]
-
-	count, err := handler.service.CountByLetter(r.Context(), runeLetter)
+	count, err := handler.service.CountByLetter(
+		r.Context(),
+		letter,
+		strategy,
+	)
 
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		json.NewEncoder(w).Encode(ErrorResponse{
-			Error: "failed to count cities",
+			Error: "Server error",
 		})
 		return
 	}
