@@ -8,6 +8,21 @@ import (
 	"github.com/sergeylys/city-counter/backend/internal/config"
 )
 
+func cors(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+
+		if r.Method == http.MethodOptions {
+			w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+			w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+			w.WriteHeader(http.StatusNoContent)
+			return
+		}
+
+		next.ServeHTTP(w, r)
+	})
+}
+
 func main() {
 	cfg := config.Load()
 
@@ -20,7 +35,7 @@ func main() {
 
 	log.Printf("Server listening on %s", address)
 
-	if err := http.ListenAndServe(address, nil); err != nil {
+	if err := http.ListenAndServe(address, cors(http.DefaultServeMux)); err != nil {
 		log.Fatal(err)
 	}
 }
