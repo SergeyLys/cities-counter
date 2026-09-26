@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+<body>
+  <input type="radio" id="bruteforce" name="strategy" value="bruteforce" checked />
+  <label for="bruteforce">Brute</label>
+
+  <input type="radio" id="startswith" name="strategy" value="startswith" />
+  <label for="startswith">Efficient</label>
+
+  <input type="text" id="letter" oninput="handleInputChange(event)" />
+
+  <div id="count-result"></div>
+
+  <script>
+    function debounce(fn, ms) {
+      let timer;
+
+      return (...args) => {
+        clearTimeout(timer);
+        timer = setTimeout(() => fn(...args), ms);
+      };
+    }
+
+    let controller = null;
+
+    const debouncedSearch = debounce(async (value) => {
+      if (controller) {
+        controller.abort();
+      }
+
+      controller = new AbortController();
+
+      const strategy = document.querySelector(
+        'input[name="strategy"]:checked'
+      ).value;
+
+      const params = new URLSearchParams({
+        letter: value,
+        strategy: strategy,
+      });
+
+      try {
+        const response = await fetch(
+          `http://localhost:8080/api/cities/count?${params}`,
+          {
+            signal: controller.signal,
+          }
+        );
+
+        const data = await response.json();
+
+        document.getElementById('count-result').textContent = JSON.stringify(data);
+      } catch (error) {
+        if (error.name === "AbortError") {
+          console.log("Request aborted");
+          return;
+        }
+
+        console.error("Request failed:", error);
+      }
+    }, 500);
+
+    function handleInputChange(event) {
+      const value = event.target.value.trim();
+
+      if (!value) {
+        if (controller) {
+          controller.abort();
+          controller = null;
+        }
+
+        document.getElementById('count-result').textContent = '';
+        return;
+      }
+
+      debouncedSearch(value);
+    }
+  </script>
+</body>
+</html>
