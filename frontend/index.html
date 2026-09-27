@@ -3,18 +3,238 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Document</title>
+  <meta name="theme-color" content="#0b1220">
+  <title>City Counter — Explore the world's cities</title>
+  <style>
+    :root {
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-synthesis: none;
+      text-rendering: optimizeLegibility;
+      -webkit-font-smoothing: antialiased;
+      --ink: #eef4ff;
+      --muted: #9baac3;
+      --mint: #71f0c0;
+      --panel: rgba(18, 29, 48, 0.88);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      min-width: 320px;
+      min-height: 100vh;
+      display: flex;
+      margin: 0;
+      padding: 40px 20px;
+      color: var(--ink);
+      background:
+        radial-gradient(ellipse at 16% 12%, rgba(28, 101, 116, 0.24), transparent 35%),
+        radial-gradient(ellipse at 85% 84%, rgba(78, 63, 151, 0.22), transparent 34%),
+        #0b1220;
+    }
+
+    .app-shell { 
+      width: min(100%, 720px); 
+      margin: auto;
+    }
+
+    .counter-card {
+      position: relative;
+      padding: clamp(28px, 6vw, 54px);
+      border: 1px solid rgba(174, 195, 225, 0.15);
+      border-radius: 28px;
+      background: linear-gradient(145deg, rgba(24, 38, 61, 0.96), var(--panel));
+      box-shadow: 0 32px 90px rgba(0, 0, 0, 0.38), inset 0 1px rgba(255, 255, 255, 0.045);
+    }
+
+    h1 {
+      max-width: 540px;
+      margin: 0;
+      font-size: clamp(2.5rem, 7vw, 4.35rem);
+      font-weight: 720;
+      letter-spacing: -0.065em;
+      line-height: 0.99;
+    }
+
+    h1 span {
+      color: transparent;
+      background: linear-gradient(100deg, #71f0c0 4%, #8bd9f5 70%, #b9b4ff);
+      background-clip: text;
+      -webkit-background-clip: text;
+    }
+
+    .page-title {
+      margin-bottom: 34px;
+    }
+
+    .field-label, .strategy-label {
+      display: block;
+      margin-bottom: 11px;
+      color: #d9e3f2;
+      font-size: 0.83rem;
+      font-weight: 650;
+    }
+
+    .search-box { position: relative; }
+
+    .search-icon {
+      position: absolute;
+      top: 50%;
+      left: 17px;
+      width: 19px;
+      height: 19px;
+      color: #8fa1bb;
+      transform: translateY(-50%);
+      pointer-events: none;
+    }
+
+    .letter-input {
+      width: 100%;
+      height: 58px;
+      padding: 0 18px 0 49px;
+      border: 1px solid rgba(174, 195, 225, 0.19);
+      border-radius: 15px;
+      outline: none;
+      color: var(--ink);
+      background: rgba(6, 13, 25, 0.54);
+      font: inherit;
+      font-size: 1rem;
+      transition: border-color 160ms ease, box-shadow 160ms ease, background 160ms ease;
+    }
+
+    .letter-input::placeholder { color: #71819a; }
+    .letter-input:hover { border-color: rgba(174, 195, 225, 0.32); }
+    .letter-input:focus { border-color: rgba(113, 240, 192, 0.72); background: rgba(6, 13, 25, 0.76); box-shadow: 0 0 0 4px rgba(113, 240, 192, 0.1); }
+
+    .strategy-wrap { margin-top: 25px; }
+
+    .strategy-options {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .strategy-options input {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      clip-path: inset(50%);
+    }
+
+    .strategy-options label {
+      display: flex;
+      min-height: 56px;
+      align-items: center;
+      gap: 11px;
+      padding: 11px 14px;
+      border: 1px solid rgba(174, 195, 225, 0.14);
+      border-radius: 14px;
+      color: #a9b7cb;
+      background: rgba(7, 14, 26, 0.34);
+      cursor: pointer;
+      transition: border-color 160ms ease, background 160ms ease, color 160ms ease;
+    }
+
+    .strategy-options label:hover { border-color: rgba(174, 195, 225, 0.32); color: var(--ink); }
+    .strategy-options input:checked + label { border-color: rgba(113, 240, 192, 0.46); color: #e9fff7; background: rgba(113, 240, 192, 0.085); }
+    .strategy-options input:focus-visible + label { outline: 3px solid rgba(113, 240, 192, 0.42); outline-offset: 3px; }
+
+    .strategy-icon {
+      display: grid;
+      width: 31px;
+      height: 31px;
+      flex: 0 0 auto;
+      place-items: center;
+      border-radius: 10px;
+      color: #aab9cf;
+      background: rgba(151, 172, 204, 0.1);
+    }
+
+    .strategy-options input:checked + label .strategy-icon { color: var(--mint); background: rgba(113, 240, 192, 0.12); }
+    .strategy-icon svg { width: 16px; height: 16px; }
+    .strategy-copy { display: flex; flex-direction: column; gap: 3px; }
+    .strategy-copy strong { color: inherit; font-size: 0.84rem; font-weight: 650; }
+    .strategy-copy small { color: #8595ad; font-size: 0.72rem; }
+
+    .result-panel {
+      min-height: 84px;
+      margin-top: 26px;
+      padding: 16px 18px;
+      border: 1px solid rgba(174, 195, 225, 0.12);
+      border-radius: 15px;
+      background: rgba(5, 12, 23, 0.45);
+    }
+
+    .result-heading {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+      color: #93a4bd;
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.11em;
+      text-transform: uppercase;
+    }
+
+    .result-heading svg { width: 14px; height: 14px; color: var(--mint); }
+
+    .count-result {
+      min-height: 21px;
+      color: #e4edf8;
+      font-size: 0.92rem;
+      line-height: 1.5;
+    }
+
+    .count-result:empty::before { color: #71819a; content: "Your city count will appear here"; }
+
+    @media (max-width: 520px) {
+      body { padding: 26px 14px; }
+      .brand { margin-bottom: 20px; }
+      .counter-card { border-radius: 22px; }
+      .strategy-options { grid-template-columns: 1fr; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; transition-duration: 0.01ms !important; }
+    }
+  </style>
 </head>
 <body>
-  <input type="radio" id="bruteforce" name="strategy" value="bruteforce" checked />
-  <label for="bruteforce">Brute</label>
+  <main class="app-shell">
+    <section class="counter-card">
+      <h1 class="page-title">How many cities<br><span>start with…</span></h1>
 
-  <input type="radio" id="startswith" name="strategy" value="startswith" />
-  <label for="startswith">Efficient</label>
+      <label class="field-label" for="letter">Choose a starting letter</label>
+      <div class="search-box">
+        <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="10.8" cy="10.8" r="6.8"/><path d="m16 16 4.5 4.5"/></svg>
+        <input type="text" id="letter" class="letter-input" oninput="handleInputChange(event)" placeholder="Try a letter, like A" autocomplete="off" maxlength="1">
+      </div>
 
-  <input type="text" id="letter" oninput="handleInputChange(event)" />
+      <div class="strategy-wrap">
+        <span class="strategy-label">Counting method</span>
+        <div class="strategy-options">
+          <input type="radio" id="bruteforce" name="strategy" value="bruteforce" checked>
+          <label for="bruteforce">
+            <span class="strategy-icon"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M4 4v12M8 4v12M12 4v12M16 4v12M2 7h2M6 12h2M10 6h2M14 14h2"/></svg></span>
+            <span class="strategy-copy"><strong>Brute force</strong><small>Check every city</small></span>
+          </label>
+          <input type="radio" id="startswith" name="strategy" value="startswith">
+          <label for="startswith">
+            <span class="strategy-icon"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 5h14M3 10h9M3 15h5"/><path d="m14 12 3 3-3 3"/></svg></span>
+            <span class="strategy-copy"><strong>Prefix search</strong><small>Optimized lookup</small></span>
+          </label>
+        </div>
+      </div>
 
-  <div id="count-result"></div>
+      <div class="result-panel">
+        <div class="result-heading"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 16V9m5 7V4m5 12v-5m5 5V7"/></svg>Matching cities</div>
+        <div class="count-result"></div>
+      </div>
+    </section>
+  </main>
 
   <script>
     function debounce(fn, ms) {
@@ -46,7 +266,7 @@
 
       try {
         const response = await fetch(
-          `http://localhost:8080/api/cities/count?${params}`,
+          `/api/cities/count?${params}`,
           {
             signal: controller.signal,
           }
@@ -54,7 +274,7 @@
 
         const data = await response.json();
 
-        document.getElementById('count-result').textContent = JSON.stringify(data);
+        document.querySelector('.count-result').textContent = JSON.stringify(data);
       } catch (error) {
         if (error.name === "AbortError") {
           console.log("Request aborted");
@@ -74,7 +294,7 @@
           controller = null;
         }
 
-        document.getElementById('count-result').textContent = '';
+        document.querySelector('.count-result').textContent = '';
         return;
       }
 
